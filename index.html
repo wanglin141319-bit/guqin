@@ -453,6 +453,43 @@
       display: flex; justify-content: space-between; font-size: 0.75rem; color: rgba(245,240,232,0.25);
     }
 
+    /* ─── GRAVITY / PARALLAX ─── */
+    .gravity-layer {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+    }
+    .ink-particle {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0;
+      transition: opacity 1.5s ease;
+      will-change: transform;
+    }
+    .ink-particle.visible { opacity: 1; }
+    .ink-particle.type-dot {
+      background: radial-gradient(circle, rgba(26,21,16,0.12) 0%, transparent 70%);
+    }
+    .ink-particle.type-gold {
+      background: radial-gradient(circle, rgba(201,168,76,0.10) 0%, transparent 70%);
+    }
+    .ink-particle.type-ring {
+      border: 1px solid rgba(201,168,76,0.08);
+      background: transparent;
+    }
+
+    .hero-content { transition: transform 0.15s ease-out; will-change: transform; }
+    .hero-ink-wash { transition: transform 0.3s ease-out; will-change: transform; }
+    .hero-bg { transition: transform 0.5s ease-out; will-change: transform; }
+
+    .guqin-card {
+      transform-style: preserve-3d;
+      perspective: 800px;
+      will-change: transform;
+    }
+    .guqin-card .card-body { transform: translateZ(20px); }
+
+    .phil-accent { transition: transform 0.2s ease-out; will-change: transform; }
+    .step-num { transition: transform 0.2s ease-out; will-change: transform; }
+
     /* ─── ANIMATIONS ─── */
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(30px); }
@@ -464,6 +501,13 @@
     @keyframes bounce {
       0%, 100% { transform: translateX(-50%) translateY(0); }
       50% { transform: translateX(-50%) translateY(8px); }
+    }
+    @keyframes particleDrift {
+      0%   { transform: translate(0, 0) scale(1); }
+      25%  { transform: translate(5px, -8px) scale(1.02); }
+      50%  { transform: translate(-3px, -12px) scale(0.98); }
+      75%  { transform: translate(-8px, -4px) scale(1.01); }
+      100% { transform: translate(0, 0) scale(1); }
     }
 
     /* ─── MOBILE ─── */
@@ -489,6 +533,9 @@
   </style>
 </head>
 <body>
+
+  <!-- GRAVITY PARTICLES -->
+  <div class="gravity-layer" id="gravityLayer"></div>
 
   <!-- NAV -->
   <nav id="navbar">
@@ -795,6 +842,157 @@
   </footer>
 
   <script>
+    // ═══════════════════════════════════════
+    // 鼠标重力感应系统
+    // ═══════════════════════════════════════
+
+    const GRAVITY_CONFIG = {
+      particleCount: 28,
+      heroDepth: 18,        // hero内容最大偏移 px
+      inkWashDepth: 12,     // 水墨层偏移
+      bgDepth: 6,           // 背景层偏移
+      cardTiltMax: 6,       // 卡片最大倾斜 deg
+      easing: 0.06,         // 跟随速度 (0-1, 越小越丝滑)
+      particleInfluence: 0.35, // 粒子受鼠标影响的半径比例
+    };
+
+    // ─── 状态 ───
+    const mouse = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5 };
+    let rafId = null;
+
+    // ─── 创建墨粒 ───
+    function createParticles() {
+      const layer = document.getElementById('gravityLayer');
+      const types = ['type-dot', 'type-gold', 'type-ring'];
+      for (let i = 0; i < GRAVITY_CONFIG.particleCount; i++) {
+        const p = document.createElement('div');
+        const type = types[Math.floor(Math.random() * types.length)];
+        p.className = `ink-particle ${type}`;
+
+        const size = type === 'type-ring'
+          ? 30 + Math.random() * 80
+          : 8 + Math.random() * 50;
+        p.style.width = size + 'px';
+        p.style.height = size + 'px';
+        p.style.left = Math.random() * 100 + '%';
+        p.style.top = Math.random() * 100 + '%';
+
+        // 每个粒子独有的重力参数
+        p.dataset.depth = (0.3 + Math.random() * 0.7).toFixed(3);
+        p.dataset.baseX = p.style.left;
+        p.dataset.baseY = p.style.top;
+        p.dataset.driftPhase = (Math.random() * Math.PI * 2).toFixed(3);
+        p.dataset.driftSpeed = (0.2 + Math.random() * 0.5).toFixed(3);
+        p.dataset.driftAmp = (3 + Math.random() * 8).toFixed(3);
+
+        const animDur = 12 + Math.random() * 20;
+        p.style.animation = `particleDrift ${animDur}s ease-in-out infinite`;
+        p.style.animationDelay = `-${Math.random() * animDur}s`;
+
+        layer.appendChild(p);
+        setTimeout(() => p.classList.add('visible'), 300 + i * 80);
+      }
+    }
+
+    // ─── 主动画循环 ───
+    let lastTime = 0;
+    function gravityLoop(timestamp) {
+      // 丝滑插值跟随
+      mouse.tx += (mouse.x - mouse.tx) * GRAVITY_CONFIG.easing;
+      mouse.ty += (mouse.y - mouse.ty) * GRAVITY_CONFIG.easing;
+
+      // 偏移量 (中心为0)
+      const dx = (mouse.tx - 0.5) * 2; // -1 ~ 1
+      const dy = (mouse.ty - 0.5) * 2;
+      const now = timestamp * 0.001;
+
+      // ── Hero 视差 ──
+      const heroContent = document.querySelector('.hero-content');
+      if (heroContent) {
+        heroContent.style.transform =
+          `translate(${dx * GRAVITY_CONFIG.heroDepth}px, ${dy * GRAVITY_CONFIG.heroDepth}px)`;
+      }
+
+      const heroInk = document.querySelector('.hero-ink-wash');
+      if (heroInk) {
+        heroInk.style.transform =
+          `translate(${dx * GRAVITY_CONFIG.inkWashDepth}px, ${dy * GRAVITY_CONFIG.inkWashDepth}px)`;
+      }
+
+      const heroBg = document.querySelector('.hero-bg');
+      if (heroBg) {
+        heroBg.style.transform =
+          `translate(${dx * GRAVITY_CONFIG.bgDepth}px, ${dy * GRAVITY_CONFIG.bgDepth}px)`;
+      }
+
+      // ── 墨粒重力 ──
+      const particles = document.querySelectorAll('.ink-particle');
+      particles.forEach(p => {
+        const depth = parseFloat(p.dataset.depth);
+        const baseX = parseFloat(p.dataset.baseX);
+        const baseY = parseFloat(p.dataset.baseY);
+        const phase = parseFloat(p.dataset.driftPhase);
+        const speed = parseFloat(p.dataset.driftSpeed);
+        const amp = parseFloat(p.dataset.driftAmp);
+
+        const drift = Math.sin(now * speed + phase) * amp;
+
+        const influence = GRAVITY_CONFIG.particleInfluence * depth;
+        const px = dx * influence * window.innerWidth * 0.12;
+        const py = dy * influence * window.innerHeight * 0.12;
+
+        p.style.transform = `translate(${px + drift}px, ${py + drift * 0.5}px)`;
+      });
+
+      // ── 装饰元素 ──
+      const accent = document.querySelector('.phil-accent');
+      if (accent) {
+        accent.style.transform = `translate(${dx * 8}px, ${dy * 8}px)`;
+      }
+
+      document.querySelectorAll('.step-num').forEach((el, i) => {
+        const dir = i % 2 === 0 ? 1 : -1;
+        el.style.transform = `translate(${dx * 4 * dir}px, ${dy * 3}px)`;
+      });
+
+      rafId = requestAnimationFrame(gravityLoop);
+    }
+
+    // ─── 鼠标追踪 ───
+    document.addEventListener('mousemove', e => {
+      mouse.x = e.clientX / window.innerWidth;
+      mouse.y = e.clientY / window.innerHeight;
+    });
+
+    // ─── 卡片3D倾斜 ───
+    function setupCardTilt() {
+      document.querySelectorAll('.guqin-card').forEach(card => {
+        card.addEventListener('mousemove', e => {
+          const rect = card.getBoundingClientRect();
+          const cx = (e.clientX - rect.left) / rect.width - 0.5;
+          const cy = (e.clientY - rect.top) / rect.height - 0.5;
+          const tilt = GRAVITY_CONFIG.cardTiltMax;
+          card.style.transform = `perspective(800px) rotateY(${cx * tilt}deg) rotateX(${-cy * tilt}deg) translateY(-4px)`;
+        });
+        card.addEventListener('mouseleave', () => {
+          card.style.transform = 'perspective(800px) rotateY(0) rotateX(0) translateY(0)';
+          card.style.transition = 'transform 0.5s ease';
+        });
+        card.addEventListener('mouseenter', () => {
+          card.style.transition = 'transform 0.1s ease-out';
+        });
+      });
+    }
+
+    // ─── 启动 ───
+    createParticles();
+    setupCardTilt();
+    rafId = requestAnimationFrame(gravityLoop);
+
+    // ═══════════════════════════════════════
+    // 原有功能
+    // ═══════════════════════════════════════
+
     // ─── NAV SCROLL ───
     window.addEventListener('scroll', () => {
       document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 60);
@@ -843,6 +1041,12 @@
         links.style.padding = '2rem';
         links.style.boxShadow = '0 10px 30px rgba(26,21,16,0.1)';
       }
+    }
+
+    // ─── 触摸设备降级 ───
+    if ('ontouchstart' in window) {
+      cancelAnimationFrame(rafId);
+      document.getElementById('gravityLayer').style.display = 'none';
     }
   </script>
 </body>
