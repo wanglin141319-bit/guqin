@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>七弦斋 · 古琴</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600;700;900&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #1a1510;
+      --ink-light: #3d3428;
+      --paper: #f5f0e8;
+      --paper-warm: #ede6d6;
+      --gold: #c9a84c;
+      --gold-light: #e8d5a3;
+      --vermillion: #b83c2e;
+      --mist: rgba(245, 240, 232, 0.92);
+      --shadow: 0 8px 40px rgba(26, 21, 16, 0.12);
+      --shadow-deep: 0 20px 60px rgba(26, 21, 16, 0.25);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; font-size: 16px; }
+
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      font-family: 'Noto Serif SC', 'STSong', serif;
+      overflow-x: hidden;
+      line-height: 1.8;
+    }
+
+    ::selection { background: var(--gold-light); color: var(--ink); }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--paper-warm); }
+    ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }
+
+    /* ─── NAV ─── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      padding: 1.5rem 4rem;
+      display: flex; justify-content: space-between; align-items: center;
+      transition: all 0.5s ease;
+    }
+    nav.scrolled {
+      background: var(--mist);
+      backdrop-filter: blur(20px);
+      padding: 1rem 4rem;
+      box-shadow: 0 2px 30px rgba(26,21,16,0.08);
+    }
+    .nav-logo {
+      font-family: 'ZCOOL XiaoWei', serif;
+      font-size: 1.8rem;
+      color: var(--ink);
+      letter-spacing: 0.3em;
+      text-decoration: none;
+    }
+    .nav-logo span { color: var(--gold); }
+    .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+    .nav-links a {
+      text-decoration: none; color: var(--ink-light);
+      font-size: 0.85rem; letter-spacing: 0.15em;
+      position: relative; transition: color 0.3s;
+    }
+    .nav-links a::after {
+      content: ''; position: absolute; bottom: -4px; left: 0;
+      width: 0; height: 1px; background: var(--gold);
+      transition: width 0.3s ease;
+    }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-links a:hover::after { width: 100%; }
+    .nav-cta {
+      padding: 0.6rem 1.8rem;
+      border: 1px solid var(--gold);
+      color: var(--gold) !important;
+      letter-spacing: 0.1em;
+      transition: all 0.3s !important;
+    }
+    .nav-cta:hover { background: var(--gold) !important; color: var(--paper) !important; }
+    .nav-cta::after { display: none !important; }
+
+    /* ─── MOBILE NAV ─── */
+    .nav-toggle { display: none; flex-direction: column; gap: 5px; cursor: pointer; }
+    .nav-toggle span { width: 24px; height: 1.5px; background: var(--ink); transition: 0.3s; }
+
+    /* ─── HERO ─── */
+    .hero {
+      height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute; inset: 0;
+      background: 
+        radial-gradient(ellipse 60% 80% at 20% 60%, rgba(201,168,76,0.06) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 60% at 80% 30%, rgba(184,60,46,0.04) 0%, transparent 60%),
+        linear-gradient(180deg, var(--paper) 0%, var(--paper-warm) 100%);
+    }
+    .hero-ink-wash {
+      position: absolute; inset: 0;
+      opacity: 0.04;
+      background-image: 
+        radial-gradient(ellipse 300px 200px at 10% 80%, var(--ink) 0%, transparent 70%),
+        radial-gradient(ellipse 200px 400px at 90% 20%, var(--ink) 0%, transparent 60%),
+        radial-gradient(ellipse 150px 300px at 50% 50%, var(--ink) 0%, transparent 50%);
+    }
+    .hero-content {
+      position: relative; z-index: 2;
+      text-align: center;
+      max-width: 800px;
+      padding: 0 2rem;
+    }
+    .hero-sub {
+      font-size: 0.75rem; letter-spacing: 0.6em;
+      color: var(--gold); text-transform: uppercase;
+      margin-bottom: 2rem;
+      opacity: 0; animation: fadeUp 1s ease 0.3s forwards;
+    }
+    .hero-title {
+      font-family: 'ZCOOL XiaoWei', serif;
+      font-size: clamp(3.5rem, 8vw, 7rem);
+      font-weight: 400;
+      line-height: 1.1;
+      letter-spacing: 0.2em;
+      color: var(--ink);
+      opacity: 0; animation: fadeUp 1s ease 0.5s forwards;
+    }
+    .hero-title em {
+      font-style: normal; color: var(--gold);
+      display: block; font-size: 0.5em; letter-spacing: 0.5em;
+    }
+    .hero-divider {
+      width: 60px; height: 1px;
+      background: var(--gold); margin: 2rem auto;
+      opacity: 0; animation: fadeIn 1s ease 0.8s forwards;
+    }
+    .hero-desc {
+      font-size: 1rem; color: var(--ink-light);
+      max-width: 480px; margin: 0 auto 3rem;
+      line-height: 2;
+      opacity: 0; animation: fadeUp 1s ease 1s forwards;
+    }
+    .hero-actions {
+      display: flex; gap: 1.5rem; justify-content: center;
+      opacity: 0; animation: fadeUp 1s ease 1.2s forwards;
+    }
+    .btn-primary {
+      padding: 1rem 3rem;
+      background: var(--ink); color: var(--paper);
+      text-decoration: none; letter-spacing: 0.2em; font-size: 0.85rem;
+      transition: all 0.4s ease;
+      position: relative; overflow: hidden;
+    }
+    .btn-primary::before {
+      content: ''; position: absolute; inset: 0;
+      background: var(--gold);
+      transform: translateX(-101%); transition: transform 0.4s ease;
+    }
+    .btn-primary:hover::before { transform: translateX(0); }
+    .btn-primary span { position: relative; z-index: 1; }
+    .btn-ghost {
+      padding: 1rem 3rem;
+      border: 1px solid var(--ink-light); color: var(--ink);
+      text-decoration: none; letter-spacing: 0.2em; font-size: 0.85rem;
+      transition: all 0.4s ease;
+    }
+    .btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+
+    .hero-scroll {
+      position: absolute; bottom: 3rem; left: 50%; transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+      color: var(--ink-light); font-size: 0.7rem; letter-spacing: 0.3em;
+      animation: bounce 2s ease infinite;
+    }
+    .hero-scroll::after {
+      content: ''; width: 1px; height: 40px;
+      background: linear-gradient(to bottom, var(--gold), transparent);
+    }
+
+    /* ─── SECTION COMMONS ─── */
+    section { padding: 8rem 4rem; }
+    .section-label {
+      font-size: 0.7rem; letter-spacing: 0.5em;
+      color: var(--gold); text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+    .section-title {
+      font-family: 'ZCOOL XiaoWei', serif;
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      letter-spacing: 0.2em; line-height: 1.3;
+      margin-bottom: 1.5rem;
+    }
+    .section-divider {
+      width: 40px; height: 1px; background: var(--gold); margin-bottom: 2rem;
+    }
+
+    /* ─── PHILOSOPHY ─── */
+    .philosophy {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 6rem; align-items: center;
+      max-width: 1200px; margin: 0 auto;
+    }
+    .phil-text { opacity: 0; transform: translateY(40px); transition: all 0.8s ease; }
+    .phil-text.visible { opacity: 1; transform: none; }
+    .phil-text p { color: var(--ink-light); font-size: 1.05rem; line-height: 2.2; margin-bottom: 1.5rem; }
+    .phil-quote {
+      border-left: 2px solid var(--gold);
+      padding-left: 2rem;
+      font-size: 1.1rem; font-style: italic;
+      color: var(--ink); margin-top: 2rem;
+    }
+    .phil-visual {
+      position: relative;
+      opacity: 0; transform: translateX(40px); transition: all 0.8s ease 0.2s;
+    }
+    .phil-visual.visible { opacity: 1; transform: none; }
+    .phil-img-frame {
+      aspect-ratio: 3/4;
+      background: linear-gradient(135deg, var(--ink-light) 0%, var(--ink) 100%);
+      position: relative; overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .phil-img-frame::before {
+      content: '琴'; font-family: 'ZCOOL XiaoWei', serif;
+      font-size: 12rem; color: rgba(201,168,76,0.15);
+      position: absolute;
+    }
+    .phil-img-inner {
+      position: absolute; inset: 8px;
+      border: 1px solid rgba(201,168,76,0.3);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .phil-img-text {
+      color: rgba(245,240,232,0.6);
+      font-family: 'ZCOOL XiaoWei', serif;
+      font-size: 1rem; letter-spacing: 1em;
+      position: absolute; z-index: 2;
+    }
+    .phil-accent {
+      position: absolute; top: -20px; right: -20px;
+      width: 100px; height: 100px;
+      border: 1px solid var(--gold);
+      opacity: 0.4;
+    }
+
+    /* ─── COLLECTION ─── */
+    .collection { max-width: 1200px; margin: 0 auto; }
+    .collection-header { text-align: center; margin-bottom: 5rem; }
+    .collection-header p { color: var(--ink-light); max-width: 600px; margin: 1rem auto 0; }
+    .collection-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+    }
+    .guqin-card {
+      background: var(--paper-warm);
+      border: 1px solid rgba(201,168,76,0.2);
+      overflow: hidden;
+      transition: all 0.5s ease;
+      cursor: pointer;
+      opacity: 0; transform: translateY(30px);
+    }
+    .guqin-card.visible { opacity: 1; transform: none; }
+    .guqin-card:hover { box-shadow: var(--shadow-deep); transform: translateY(-4px); }
+    .guqin-card:hover .card-img::after { opacity: 0.3; }
+    .card-img {
+      aspect-ratio: 4/3;
+      background: linear-gradient(135deg, #2a2318 0%, #1a1510 100%);
+      position: relative; overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .card-img::before {
+      content: ''; position: absolute; inset: 0;
+      background: 
+        radial-gradient(ellipse 80% 50% at 50% 80%, rgba(201,168,76,0.1) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 80% at 30% 50%, rgba(26,21,16,0.5) 0%, transparent 50%);
+    }
+    .card-img::after {
+      content: ''; position: absolute; inset: 0;
+      background: rgba(201,168,76,0.08);
+      opacity: 0; transition: opacity 0.5s;
+    }
+    .card-guqin-silhouette {
+      width: 80%; height: 60%;
+      position: relative;
+    }
+    .card-guqin-silhouette svg { width: 100%; height: 100%; }
+    .card-body { padding: 2rem; }
+    .card-type {
+      font-size: 0.7rem; letter-spacing: 0.3em;
+      color: var(--gold); text-transform: uppercase; margin-bottom: 0.5rem;
+    }
+    .card-name {
+      font-family: 'ZCOOL XiaoWei', serif;
+      font-size: 1.5rem; letter-spacing: 0.15em; margin-bottom: 0.8rem;
+    }
+    .card-desc { font-size: 0.85rem; color: var(--ink-light); line-height: 1.8; margin-bottom: 1.5rem; }
+    .card-footer { display: flex; justify-content: space-between; align-items: center; }
+    .card-price { font-size: 1.1rem; color: var(--vermillion); font-weight: 600; }
+    .card-price span { font-size: 0.75rem; color: var(--ink-light); font-weight: 400; }
+    .card-link { font-size: 0.75rem; letter-spacing: 0.2em; color: var(--ink-light); text-decoration: none; border-bottom: 1px solid var(--gold); padding-bottom: 2px; transition: color 0.3s; }
+    .card-link:hover { color: var(--gold); }
+
+    /* ─── CRAFTSMANSHIP ─── */
+    .craftsmanship {
+      background: var(--ink);
+      color: var(--paper);
+      position: relative; overflow: hidden;
+    }
+    .craftsmanship::before {
+      content: ''; position: absolute; inset: 0;
+      background: 
+        radial-gradient(ellipse 50% 80% at 90% 50%, rgba(201,168,76,0.05) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 60% at 10% 20%, rgba(184,60,46,0.05) 0%, transparent 50%);
+    }
+    .craft-inner { max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
+    .craft-header { text-align: center; margin-bottom: 5rem; }
+    .craft-header .section-title { color: var(--paper); }
+    .craft-header p { color: rgba(245,240,232,0.5); }
+    .craft-steps {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 3rem; position: relative;
+    }
+    .craft-steps::before {
+      content: ''; position: absolute; top: 2.5rem; left: 10%; right: 10%; height: 1px;
+      background: linear-gradient(to right, transparent, var(--gold), transparent);
+    }
+    .craft-step {
+      text-align: center;
+      opacity: 0; transform: translateY(30px); transition: all 0.6s ease;
+    }
+    .craft-step.visible { opacity: 1; transform: none; }
+    .step-num {
+      width: 60px; height: 60px; border: 1px solid var(--gold);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 2rem;
+      font-family: 'ZCOOL XiaoWei', serif; font-size: 1.5rem; color: var(--gold);
+      background: rgba(201,168,76,0.05);
+    }
+    .step-title {
+      font-family: 'ZCOOL XiaoWei', serif; font-size: 1.3rem;
+      letter-spacing: 0.15em; margin-bottom: 1rem;
+    }
+    .step-desc { font-size: 0.85rem; color: rgba(245,240,232,0.5); line-height: 1.9; }
+    .craft-detail {
+      margin-top: 6rem;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 6rem; align-items: center;
+    }
+    .craft-detail-img {
+      aspect-ratio: 1; background: rgba(201,168,76,0.05);
+      border: 1px solid rgba(201,168,76,0.15);
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+    }
+    .craft-detail-img::before {
+      content: '斫'; font-family: 'ZCOOL XiaoWei', serif;
+      font-size: 8rem; color: rgba(201,168,76,0.08);
+    }
+    .craft-detail-text p { color: rgba(245,240,232,0.6); line-height: 2.2; font-size: 1rem; margin-bottom: 1.5rem; }
+    .craft-detail-text h3 { font-family: 'ZCOOL XiaoWei', serif; font-size: 1.5rem; letter-spacing: 0.2em; margin-bottom: 1.5rem; color: var(--gold); }
+
+    /* ─── KNOWLEDGE ─── */
+    .knowledge { max-width: 1200px; margin: 0 auto; }
+    .knowledge-header { text-align: center; margin-bottom: 4rem; }
+    .knowledge-header p { color: var(--ink-light); }
+    .knowledge-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 3rem; }
+    .knowledge-item {
+      border-top: 1px solid rgba(201,168,76,0.3);
+      padding-top: 2rem;
+      opacity: 0; transform: translateY(20px); transition: all 0.6s ease;
+      cursor: default;
+    }
+    .knowledge-item.visible { opacity: 1; transform: none; }
+    .knowledge-item:hover { border-top-color: var(--gold); }
+    .knowledge-item h3 { font-family: 'ZCOOL XiaoWei', serif; font-size: 1.3rem; letter-spacing: 0.15em; margin-bottom: 1rem; }
+    .knowledge-item p { color: var(--ink-light); font-size: 0.9rem; line-height: 1.9; }
+
+    /* ─── TESTIMONIALS ─── */
+    .testimonials { background: var(--paper-warm); }
+    .testi-inner { max-width: 900px; margin: 0 auto; text-align: center; }
+    .testi-inner .section-title { margin-bottom: 4rem; }
+    .testi-slider { position: relative; min-height: 200px; }
+    .testi-item {
+      position: absolute; inset: 0;
+      opacity: 0; transition: opacity 0.8s ease;
+    }
+    .testi-item.active { opacity: 1; }
+    .testi-quote {
+      font-size: 1.2rem; line-height: 2.2;
+      color: var(--ink); font-style: italic;
+      margin-bottom: 2rem;
+      position: relative;
+    }
+    .testi-quote::before {
+      content: '"'; font-family: 'ZCOOL XiaoWei', serif;
+      font-size: 5rem; color: var(--gold-light);
+      position: absolute; top: -2rem; left: -1rem; line-height: 1;
+    }
+    .testi-author { font-size: 0.85rem; letter-spacing: 0.2em; color: var(--ink-light); }
+    .testi-dots { display: flex; justify-content: center; gap: 0.8rem; margin-top: 3rem; }
+    .testi-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(26,21,16,0.2); cursor: pointer; transition: all 0.3s; }
+    .testi-dot.active { background: var(--gold); width: 24px; border-radius: 3px; }
+
+    /* ─── CTA ─── */
+    .cta-section {
+      padding: 10rem 4rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-bg {
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, var(--ink) 0%, #2a2318 50%, var(--ink) 100%);
+    }
+    .cta-bg::before {
+      content: ''; position: absolute; inset: 0;
+      background: 
+        radial-gradient(ellipse 60% 80% at 50% 50%, rgba(201,168,76,0.08) 0%, transparent 60%);
+    }
+    .cta-inner { position: relative; z-index: 1; }
+    .cta-inner .section-title { color: var(--paper); font-size: clamp(2rem, 4vw, 3rem); }
+    .cta-inner p { color: rgba(245,240,232,0.5); max-width: 500px; margin: 1.5rem auto 3rem; }
+    .cta-inner .btn-primary {
+      background: var(--gold); color: var(--ink);
+    }
+    .cta-inner .btn-primary::before { background: var(--paper-warm); }
+
+    /* ─── FOOTER ─── */
+    footer {
+      background: var(--ink); color: rgba(245,240,232,0.5);
+      padding: 4rem;
+    }
+    .footer-inner {
+      max-width: 1200px; margin: 0 auto;
+      display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 4rem;
+    }
+    .footer-brand { font-family: 'ZCOOL XiaoWei', serif; font-size: 1.8rem; color: var(--paper); letter-spacing: 0.3em; margin-bottom: 1rem; }
+    .footer-brand span { color: var(--gold); }
+    .footer-tagline { font-size: 0.85rem; line-height: 1.8; }
+    .footer-col h4 { font-family: 'ZCOOL XiaoWei', serif; color: var(--paper); letter-spacing: 0.2em; margin-bottom: 1.5rem; font-size: 1rem; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 0.8rem; }
+    .footer-col a { color: rgba(245,240,232,0.4); text-decoration: none; font-size: 0.85rem; transition: color 0.3s; }
+    .footer-col a:hover { color: var(--gold); }
+    .footer-bottom {
+      max-width: 1200px; margin: 3rem auto 0;
+      padding-top: 2rem; border-top: 1px solid rgba(245,240,232,0.08);
+      display: flex; justify-content: space-between; font-size: 0.75rem; color: rgba(245,240,232,0.25);
+    }
+
+    /* ─── ANIMATIONS ─── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: none; }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; } to { opacity: 1; }
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(8px); }
+    }
+
+    /* ─── MOBILE ─── */
+    @media (max-width: 1024px) {
+      section { padding: 6rem 2rem; }
+      .collection-grid { grid-template-columns: repeat(2, 1fr); }
+      .craft-steps { grid-template-columns: repeat(2, 1fr); }
+      .craft-steps::before { display: none; }
+      .craft-detail { grid-template-columns: 1fr; gap: 3rem; }
+      .footer-inner { grid-template-columns: 1fr 1fr; gap: 3rem; }
+    }
+    @media (max-width: 768px) {
+      nav { padding: 1.2rem 2rem; }
+      .nav-links { display: none; }
+      .nav-toggle { display: flex; }
+      .philosophy { grid-template-columns: 1fr; gap: 3rem; }
+      .collection-grid { grid-template-columns: 1fr; }
+      .craft-steps { grid-template-columns: 1fr; gap: 2rem; }
+      .knowledge-grid { grid-template-columns: 1fr; }
+      .footer-inner { grid-template-columns: 1fr; gap: 2rem; }
+      .footer-bottom { flex-direction: column; gap: 1rem; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav id="navbar">
+    <a href="#" class="nav-logo">七弦<span>斋</span></a>
+    <ul class="nav-links">
+      <li><a href="#philosophy">理念</a></li>
+      <li><a href="#collection">藏品</a></li>
+      <li><a href="#craftsmanship">斫琴</a></li>
+      <li><a href="#knowledge">琴学</a></li>
+      <li><a href="#contact" class="nav-cta">联系我们</a></li>
+    </ul>
+    <div class="nav-toggle" onclick="toggleMobileNav()">
+      <span></span><span></span><span></span>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero" id="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-ink-wash"></div>
+    <div class="hero-content">
+      <p class="hero-sub">始于唐宋 · 传于匠心</p>
+      <h1 class="hero-title">
+        <em>七弦斋</em>
+        古琴
+      </h1>
+      <div class="hero-divider"></div>
+      <p class="hero-desc">
+        以琴修身，以音养德。<br>
+        每一张琴，皆斫琴师心血所凝，承载千年文人风骨。
+      </p>
+      <div class="hero-actions">
+        <a href="#collection" class="btn-primary"><span>浏览藏品</span></a>
+        <a href="#craftsmanship" class="btn-ghost">斫琴工艺</a>
+      </div>
+    </div>
+    <div class="hero-scroll">向下探索</div>
+  </section>
+
+  <!-- PHILOSOPHY -->
+  <section id="philosophy">
+    <div class="philosophy">
+      <div class="phil-text">
+        <p class="section-label">核心理念</p>
+        <h2 class="section-title">知音难觅<br>琴道不孤</h2>
+        <div class="section-divider"></div>
+        <p>
+          古琴，位列"琴棋书画"之首，是中国最古老的弹拨乐器之一。
+          三千年的岁月长河中，它承载着士人的精神寄托与审美理想，
+          成为中国文化中不可分割的一部分。
+        </p>
+        <p>
+          我们相信，一张好琴，不只是乐器，更是可以陪伴一生的挚友。
+          从选材到上弦，每一道工序都凝聚着匠人的专注与敬意。
+        </p>
+        <blockquote class="phil-quote">
+          "众器之中，琴德最优。"
+          <br><small style="font-size:0.8rem;color:var(--ink-light)">—— 嵇康《琴赋》</small>
+        </blockquote>
+      </div>
+      <div class="phil-visual">
+        <div class="phil-img-frame">
+          <div class="phil-img-inner">
+            <span class="phil-img-text">古琴 · 漆器</span>
+          </div>
+        </div>
+        <div class="phil-accent"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COLLECTION -->
+  <section id="collection" style="background: var(--paper-warm);">
+    <div class="collection">
+      <div class="collection-header">
+        <p class="section-label">馆藏珍品</p>
+        <h2 class="section-title">名琴选介</h2>
+        <p>每一张琴皆有故事，每一声音皆是缘分</p>
+      </div>
+      <div class="collection-grid">
+
+        <div class="guqin-card">
+          <div class="card-img">
+            <div class="card-guqin-silhouette">
+              <svg viewBox="0 0 200 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M100 10 C100 10, 170 20, 190 40 C195 45, 198 52, 196 58 C193 66, 180 72, 100 70 C20 72, 7 66, 4 58 C2 52, 5 45, 10 40 C30 20, 100 10, 100 10Z" fill="rgba(201,168,76,0.12)" stroke="rgba(201,168,76,0.3)" stroke-width="0.5"/>
+                <path d="M100 20 C100 20, 160 28, 178 42 C180 44, 180 50, 178 52 C175 56, 165 60, 100 58 C35 60, 25 56, 22 52 C20 50, 20 44, 22 42 C40 28, 100 20, 100 20Z" fill="rgba(201,168,76,0.06)"/>
+                <line x1="100" y1="10" x2="100" y2="70" stroke="rgba(201,168,76,0.4)" stroke-width="0.3"/>
+                <circle cx="75" cy="38" r="2.5" fill="rgba(201,168,76,0.3)"/>
+                <circle cx="100" cy="34" r="2.5" fill="rgba(201,168,76,0.3)"/>
+                <circle cx="125" cy="38" r="2.5" fill="rgba(201,168,76,0.3)"/>
+              </svg>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="card-type">伏羲式</div>
+            <div class="card-name">云中君</div>
+            <p class="card-desc">百年老杉木为体，大漆反复髹涂三十余遍。音色沉稳苍古，如深山古刹之钟声。</p>
+            <div class="card-footer">
+              <div class="card-price">¥ 68,000 <span>起</span></div>
+              <a href="#" class="card-link">查看详情 →</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="guqin-card">
+          <div class="card-img" style="background: linear-gradient(135deg, #1e1810 0%, #2d2418 100%);">
+            <div class="card-guqin-silhouette">
+              <svg viewBox="0 0 200 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M100 10 C100 10, 170 20, 190 40 C195 45, 198 52, 196 58 C193 66, 180 72, 100 70 C20 72, 7 66, 4 58 C2 52, 5 45, 10 40 C30 20, 100 10, 100 10Z" fill="rgba(201,168,76,0.12)" stroke="rgba(201,168,76,0.3)" stroke-width="0.5"/>
+                <path d="M100 20 C100 20, 160 28, 178 42 C180 44, 180 50, 178 52 C175 56, 165 60, 100 58 C35 60, 25 56, 22 52 C20 50, 20 44, 22 42 C40 28, 100 20, 100 20Z" fill="rgba(201,168,76,0.06)"/>
+                <line x1="100" y1="10" x2="100" y2="70" stroke="rgba(201,168,76,0.4)" stroke-width="0.3"/>
+                <circle cx="75" cy="38" r="2.5" fill="rgba(201,168,76,0.3)"/>
+                <circle cx="100" cy="34" r="2.5" fill="rgba(201,168,76,0.3)"/>
+                <circle cx="125" cy="38" r="2.5" fill="rgba(201,168,76,0.3)"/>
+              </svg>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="card-type">仲尼式</div>
+            <div class="card-name">松风阁</div>
+            <p class="card-desc">老梧桐木底，青灰漆面。音色清越空灵，恰如松风穿林、流水潺潺。</p>
+            <div class="card-footer">
+              <div class="card-price">¥ 45,000 <span>起</span></div>
+              <a href="#" class="card-link">查看详情 →</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="guqin-card">
+          <div class="card-img" style="background: linear-gradient(135deg, #1a1510 0%, #251e14 100%);">
+            <div class="card-guqin-silhouette">
+              <svg viewBox="0 0 200 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M100 10 C100 10, 170 20, 190 40 C195 45, 198 52, 196 58 C193 66, 180 72, 100 70 C20 72, 7 66, 4 58 C2 52, 5 45, 10 40 C30 20, 100 10, 100 10Z" fill="rgba(201,168,76,0.12)" stroke="rgba(201,168,76,0.3)" stroke-width="0.5"/>
+                <path d="M100 20 C100 20, 160 28, 178 42 C180 44, 180 50, 178 52 C175 56, 165 60, 100 58 C35 60, 25 56, 22 52 C20 50, 20 44, 22 42 C40 28, 100 20, 100 20Z" fill="rgba(201,168,76,0.06)"/>
+                <line x1="100" y1="10" x2="100" y2="70" stroke="rgba(201,168,76,0.4)" stroke-width="0.3"/>
+                <circle cx="75" cy="38" r="2.5" fill="rgba(201,168,76,0.3)"/>
+                <circle cx="100" cy="34" r="2.5" fill="rgba(201,168,76,0.3)"/>
+                <circle cx="125" cy="38" r="2.5" fill="rgba(201,168,76,0.3)"/>
+              </svg>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="card-type">落霞式</div>
+            <div class="card-name">天籁</div>
+            <p class="card-desc">珍藏级老杉木，天然断纹浑然天成。低音浑厚如洪钟，高音清澈似寒泉。</p>
+            <div class="card-footer">
+              <div class="card-price">¥ 120,000 <span>起</span></div>
+              <a href="#" class="card-link">查看详情 →</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- CRAFTSMANSHIP -->
+  <section class="craftsmanship" id="craftsmanship">
+    <div class="craft-inner">
+      <div class="craft-header">
+        <p class="section-label">斫琴工艺</p>
+        <h2 class="section-title">一张琴的诞生</h2>
+        <p style="color: rgba(245,240,232,0.4); margin-top: 1rem;">历时三载，百余道工序，方成一琴</p>
+      </div>
+      <div class="craft-steps">
+        <div class="craft-step">
+          <div class="step-num">壹</div>
+          <h3 class="step-title">选材</h3>
+          <p class="step-desc">以百年老杉木、梧桐木为材，木纹顺直无疤，叩之声音清越者为上。</p>
+        </div>
+        <div class="craft-step">
+          <div class="step-num">贰</div>
+          <h3 class="step-title">制形</h3>
+          <p class="step-desc">依古法形制，斫出琴胚，挖腹腔、定厚度，毫厘之间决定音色走向。</p>
+        </div>
+        <div class="craft-step">
+          <div class="step-num">叁</div>
+          <h3 class="step-title">髹漆</h3>
+          <p class="step-desc">生漆与大漆层层相叠，自然阴干，数十遍髹涂方得温润如玉之面。</p>
+        </div>
+        <div class="craft-step">
+          <div class="step-num">肆</div>
+          <h3 class="step-title">定音</h3>
+          <p class="step-desc">上弦调音，反复试弹，去其火气，使音色圆融沉稳，方可交付。</p>
+        </div>
+      </div>
+      <div class="craft-detail">
+        <div class="craft-detail-img"></div>
+        <div class="craft-detail-text">
+          <h3>髹漆之道</h3>
+          <p>古琴髹漆是整张琴制作中最耗时也最考验功力的环节。采用天然生漆，经数十遍手工髹涂，每一遍须在恒温恒湿环境中阴干数日，方能达到"漆如琥珀、玉质温润"的效果。</p>
+          <p>面漆之后，更有推光、揩清等工序，使漆面呈现内敛的光泽，随岁月流转而愈发明亮，这正是古琴"历久弥珍"的奥秘所在。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- KNOWLEDGE -->
+  <section id="knowledge">
+    <div class="knowledge">
+      <div class="knowledge-header">
+        <p class="section-label">琴学</p>
+        <h2 class="section-title">初识古琴</h2>
+        <p>了解古琴，从这里开始</p>
+      </div>
+      <div class="knowledge-grid">
+        <div class="knowledge-item">
+          <h3>古琴的结构</h3>
+          <p>古琴全身由琴面、琴底、岳山、琴码、龙池、凤沼等组成。琴面呈弧形拱起，承载七根弦；底部平整，中开二孔——龙池与凤沼，既调音亦增共鸣。</p>
+        </div>
+        <div class="knowledge-item">
+          <h3>琴式知多少</h3>
+          <p>古琴有伏羲、仲尼、连珠、落霞、混沌、神农等数十种式样，各有其历史渊源与审美特点。伏羲式庄重沉稳，仲尼式清雅简约，落霞式线条灵动。</p>
+        </div>
+        <div class="knowledge-item">
+          <h3>如何品鉴一张琴</h3>
+          <p>好琴有"九德"：奇、古、透、润、清、匀、芳、圆、脆。看其形、听其音、抚其手感。音色以苍古、圆润、沉稳为上，切忌浮躁刺耳。</p>
+        </div>
+        <div class="knowledge-item">
+          <h3>古琴的保养</h3>
+          <p>古琴喜静怕燥，适宜放置于常温通风处，避免阳光直射与极端湿度。用后以干软布轻拭琴弦，琴面可每季薄涂一次天然防护油。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section class="testimonials" id="testimonials">
+    <div class="testi-inner">
+      <p class="section-label">琴友心声</p>
+      <h2 class="section-title">知音评说</h2>
+      <div class="testi-slider" id="testiSlider">
+        <div class="testi-item active">
+          <p class="testi-quote">拿到"云中君"的那一刻，我就知道这是我找了十年的声音。苍古而温润，抚之如对古人。每一指下去，都是一次与历史的对话。</p>
+          <p class="testi-author">—— 李先生 · 北京 · 琴学研究者</p>
+        </div>
+        <div class="testi-item">
+          <p class="testi-quote">七弦斋的琴，不只是乐器，更像是一位沉默而有德的师友。购琴三年，越弹越爱，深感当初的选择是正确的。</p>
+          <p class="testi-author">—— 王女士 · 上海 · 企业管理者</p>
+        </div>
+        <div class="testi-item">
+          <p class="testi-quote">斫琴师对每一张琴的认真态度令人动容。他们不求数量，只求每一张琴都能承载一段光阴，流传后世。</p>
+          <p class="testi-author">—— 陈先生 · 杭州 · 琴馆主理人</p>
+        </div>
+      </div>
+      <div class="testi-dots" id="testiDots">
+        <div class="testi-dot active" onclick="goToTesti(0)"></div>
+        <div class="testi-dot" onclick="goToTesti(1)"></div>
+        <div class="testi-dot" onclick="goToTesti(2)"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section" id="contact">
+    <div class="cta-bg"></div>
+    <div class="cta-inner">
+      <p class="section-label" style="color: var(--gold-light);">开启你的琴缘</p>
+      <h2 class="section-title">愿得一琴，相伴终老</h2>
+      <p>无论你是初识古琴，还是寻觅知音，我们都愿意为你找到那张命定之琴。</p>
+      <a href="mailto:contact@qixuanzhai.com" class="btn-primary"><span>联系我们</span></a>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-inner">
+      <div>
+        <div class="footer-brand">七弦<span>斋</span></div>
+        <p class="footer-tagline">传承千年琴道<br>甄选每一张值得珍藏的古琴</p>
+      </div>
+      <div class="footer-col">
+        <h4>导航</h4>
+        <ul>
+          <li><a href="#philosophy">核心理念</a></li>
+          <li><a href="#collection">名琴选介</a></li>
+          <li><a href="#craftsmanship">斫琴工艺</a></li>
+          <li><a href="#knowledge">琴学</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>服务</h4>
+        <ul>
+          <li><a href="#">私人定制</a></li>
+          <li><a href="#">古琴租赁</a></li>
+          <li><a href="#">养护服务</a></li>
+          <li><a href="#">以旧换新</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>联系</h4>
+        <ul>
+          <li><a href="mailto:contact@qixuanzhai.com">contact@qixuanzhai.com</a></li>
+          <li><a href="#">微信：七弦斋</a></li>
+          <li><a href="#">地址：上海市静安区</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 七弦斋 QiXuanZhai. 保留所有权利.</span>
+      <span>以琴会友，以德服人</span>
+    </div>
+  </footer>
+
+  <script>
+    // ─── NAV SCROLL ───
+    window.addEventListener('scroll', () => {
+      document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 60);
+    });
+
+    // ─── SCROLL ANIMATIONS ───
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+          const delay = entry.target.dataset.delay || 0;
+          setTimeout(() => entry.target.classList.add('visible'), delay);
+        }
+      });
+    }, { threshold: 0.15 });
+
+    document.querySelectorAll('.phil-text, .phil-visual, .guqin-card, .craft-step, .knowledge-item').forEach((el, i) => {
+      el.dataset.delay = (i % 4) * 120;
+      observer.observe(el);
+    });
+
+    // ─── TESTIMONIALS ───
+    let currentTesti = 0;
+    function goToTesti(n) {
+      document.querySelectorAll('.testi-item').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.testi-dot').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.testi-item')[n].classList.add('active');
+      document.querySelectorAll('.testi-dot')[n].classList.add('active');
+      currentTesti = n;
+    }
+    setInterval(() => goToTesti((currentTesti + 1) % 3), 5000);
+
+    // ─── MOBILE NAV ───
+    function toggleMobileNav() {
+      const nav = document.getElementById('navbar');
+      const links = nav.querySelector('.nav-links');
+      if (links.style.display === 'flex') {
+        links.style.display = 'none';
+      } else {
+        links.style.display = 'flex';
+        links.style.flexDirection = 'column';
+        links.style.position = 'absolute';
+        links.style.top = '100%';
+        links.style.left = '0';
+        links.style.right = '0';
+        links.style.background = 'var(--paper)';
+        links.style.padding = '2rem';
+        links.style.boxShadow = '0 10px 30px rgba(26,21,16,0.1)';
+      }
+    }
+  </script>
+</body>
+</html>
