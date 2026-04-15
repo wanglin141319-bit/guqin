@@ -6,7 +6,7 @@
   <title>松风琴社 · 古琴</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600;700;900&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@300;400;600;700;900&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
   <style>
     :root {
       --ink: #1a1510;
@@ -53,11 +53,12 @@
       box-shadow: 0 2px 30px rgba(26,21,16,0.08);
     }
     .nav-logo {
-      font-family: 'ZCOOL XiaoWei', serif;
-      font-size: 1.8rem;
+      font-family: 'Ma Shan Zheng', 'ZCOOL XiaoWei', serif;
+      font-size: 2rem;
       color: var(--ink);
-      letter-spacing: 0.3em;
+      letter-spacing: 0.15em;
       text-decoration: none;
+      font-weight: 400;
     }
     .nav-logo span { color: var(--gold); }
     .nav-links { display: flex; gap: 2.5rem; list-style: none; }
@@ -159,11 +160,11 @@
       opacity: 0; animation: fadeUp 1s ease 0.3s forwards;
     }
     .hero-title {
-      font-family: 'ZCOOL XiaoWei', serif;
+      font-family: 'Ma Shan Zheng', 'ZCOOL XiaoWei', serif;
       font-size: clamp(3.5rem, 8vw, 7rem);
       font-weight: 400;
       line-height: 1.1;
-      letter-spacing: 0.2em;
+      letter-spacing: 0.15em;
       color: var(--ink);
       opacity: 0; animation: fadeUp 1s ease 0.5s forwards;
     }
@@ -218,6 +219,40 @@
       content: ''; width: 1px; height: 40px;
       background: linear-gradient(to bottom, var(--gold), transparent);
     }
+
+    /* ─── AUDIO TOGGLE ─── */
+    .audio-toggle {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 1px solid var(--gold);
+      background: var(--mist);
+      backdrop-filter: blur(10px);
+      cursor: pointer;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+    .audio-toggle:hover {
+      background: var(--gold);
+    }
+    .audio-toggle:hover svg {
+      color: var(--paper);
+    }
+    .audio-toggle svg {
+      width: 22px;
+      height: 22px;
+      color: var(--gold);
+      transition: color 0.3s;
+    }
+    .audio-toggle .icon-muted { display: none; }
+    .audio-toggle.playing .icon-sound { display: none; }
+    .audio-toggle.playing .icon-muted { display: block; }
 
     /* ─── SECTION COMMONS ─── */
     section { padding: 8rem 4rem; }
@@ -617,6 +652,23 @@
         <circle cx="420" cy="160" r="3" fill="#1a1510" fill-opacity="0.05"/>
       </svg>
     </div>
+
+    <!-- 音乐开关 -->
+    <button class="audio-toggle" id="audioToggle" aria-label="播放背景音乐">
+      <svg class="icon-sound" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+      </svg>
+      <svg class="icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+        <line x1="23" y1="9" x2="17" y2="15"/>
+        <line x1="17" y1="9" x2="23" y2="15"/>
+      </svg>
+    </button>
+    <audio id="bgMusic" loop preload="auto">
+      <source src="https://cdn.pixabay.com/audio/2022/10/05/audio_1dacfed1d2.mp3" type="audio/mp3">
+    </audio>
 
     <!-- 飘落树叶 -->
     <div class="leaves" id="leaves"></div>
@@ -1083,9 +1135,36 @@
       });
     }
 
+    // ═══════════════════════════════════════
+    // 音乐播放功能
+    // ═══════════════════════════════════════
+    function setupAudio() {
+      const btn = document.getElementById('audioToggle');
+      const audio = document.getElementById('bgMusic');
+      
+      btn.addEventListener('click', () => {
+        if (audio.paused) {
+          audio.play().then(() => {
+            btn.classList.add('playing');
+          }).catch(e => console.log('播放被阻止:', e));
+        } else {
+          audio.pause();
+          btn.classList.remove('playing');
+        }
+      });
+      
+      // 页面加载后首次点击自动播放
+      document.addEventListener('click', function once() {
+        audio.play().then(() => btn.classList.add('playing')).catch(() => {});
+        document.removeEventListener('click', once);
+      }, { once: true });
+    }
+
     // ─── 启动 ───
+    createLeaves();
     createParticles();
     setupCardTilt();
+    setupAudio();
     rafId = requestAnimationFrame(gravityLoop);
 
     // ═══════════════════════════════════════
